@@ -1,5 +1,10 @@
-# ------------ Stage 1: Build ---------------------
-FROM golang:1.25.4 AS builder
+FROM oraclelinux:8 AS builder
+
+# Install instant client
+RUN dnf install -y oracle-instantclient-release-el8 \
+    && dnf install -y oracle-instantclient-basic oracle-instantclient-devel
+
+RUN dnf install -y gcc gcc-c++ make
 
 WORKDIR /app
 
@@ -8,18 +13,14 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=1 GOOS=linux go build -o users-service ./cmd/users-service
+RUN CGO_ENABLED=1 go build -o users-service ./cmd/users-service
 
-# ------------ Stage 2: Run -----------------------
-FROM ubuntu:22.04
+FROM oraclelinux:8
+
+RUN dnf install -y oracle-instantclient-basic
 
 WORKDIR /app
-
-COPY --from=builder /app/users-service /app/users-service
-COPY .env /app/.env
-
-RUN apt-get update && apt-get install -y ca-certificates
+COPY --from=builder /app/users-service .
 
 EXPOSE 8080
-
-CMD ["/app/users-service"]
+CMD ["./users-service"]
