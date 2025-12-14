@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-
 	"users-service/internal/config"
 	"users-service/internal/db"
 	"users-service/internal/handlers"
@@ -12,14 +11,16 @@ import (
 )
 
 func main() {
-	cfg := config.LoadConfig()
+	cfg := config.LoadConfigMySQL()
 
-	oracleDB, err := db.ConnectOracle(cfg)
+	// oracleDB, err := db.ConnectOracle(cfg)
+	mySqlDB, err := db.ConnectMySql(cfg)
 	if err != nil {
 		log.Fatal("Cannot connect to Oracle:", err)
 	}
+	defer mySqlDB.Close()
 
-	userRepo := repository.NewUserRepository(oracleDB)
+	userRepo := repository.NewUserRepository(mySqlDB)
 	userService := services.NewUserService(userRepo)
 	userHandler := handlers.NewUserHandler(userService)
 

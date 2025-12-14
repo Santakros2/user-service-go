@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"users-service/internal/models"
 	"users-service/internal/services"
@@ -24,9 +25,13 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.Service.CreateUser(r.Context(), input)
 	if err != nil {
+		log.Println("CreateUser error:", err)
 		http.Error(w, "Could not create user", http.StatusInternalServerError)
-		return
 	}
 
 	json.NewEncoder(w).Encode(user)
 }
+
+// func (h *UserHandler) GetUsers(w http.ResponseWriter, r http.Request) {
+// 	if (r.)
+// }

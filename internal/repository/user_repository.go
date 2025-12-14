@@ -17,7 +17,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 func (r *UserRepository) Create(ctx context.Context, u models.User, passwordHash string) error {
 	query := `
 	INSERT INTO users (user_id, email, password_hash, name, role, active)
-	VALUES (:1, :2, :3, :4, :5, :6)
+	VALUES (?, ?, ?, ?, ?, ?)
 	`
 	_, err := r.DB.ExecContext(ctx, query,
 		u.UserID,
@@ -33,7 +33,7 @@ func (r *UserRepository) Create(ctx context.Context, u models.User, passwordHash
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	query := `
 	SELECT user_id, email, name, role, active, created_at, updated_at
-	FROM users WHERE user_id = :1
+	FROM users WHERE user_id = ?
 	`
 
 	row := r.DB.QueryRowContext(ctx, query, id)

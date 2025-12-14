@@ -2,23 +2,23 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"users-service/internal/config"
 
-	_ "github.com/godror/godror"
+	// _ "github.com/godror/godror"
+	_ "github.com/sijms/go-ora/v2"
 )
 
-func ConnectOracle(cfg *config.Config) (*sql.DB, error) {
-	dsn := fmt.Sprintf(`user="%s" password="%s" connecting="%s:%s%s"`,
-		cfg.OracleUser,
-		cfg.OraclePassword,
-		cfg.OracleHost,
-		cfg.OraclePort,
-		cfg.OracleService,
-	)
+func ConnectOracle(cfg *config.ConfigOracle) (*sql.DB, error) {
+	// dsn := fmt.Sprintf(`user="%s" password="%s" connecting="%s:%s%s"`,
+	// 	cfg.OracleUser,
+	// 	cfg.OraclePassword,
+	// 	cfg.OracleHost,
+	// 	cfg.OraclePort,
+	// 	cfg.OracleService,
+	// )
 
-	db, err := sql.Open("godror", dsn)
+	db, err := sql.Open("oracle", "oracle://user:pass@localhost:1521/XEPDB1")
 
 	if err != nil {
 		return nil, err
