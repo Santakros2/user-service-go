@@ -46,3 +46,43 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 	}
 	return &u, err
 }
+
+func (r *UserRepository) GetAll(ctx context.Context) ([]*models.User, error) {
+	users := make([]*models.User, 0)
+
+	query := `SELECT * FROM USERS`
+
+	rows, err := r.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var skip any
+
+	for rows.Next() {
+		user := new(models.User)
+		err := rows.Scan(
+			&user.UserID,
+			&user.Name,
+			&user.Email,
+			&user.Role,
+			&user.Active,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&skip,
+		)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+
+}

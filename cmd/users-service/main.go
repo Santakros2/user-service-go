@@ -24,8 +24,9 @@ func main() {
 	userService := services.NewUserService(userRepo)
 	userHandler := handlers.NewUserHandler(userService)
 
-	http.HandleFunc("/users", userHandler.CreateUser)
+	http.HandleFunc("/users", userHandler.Users)
 
 	log.Println("Users Service running on port", cfg.AppPort)
 	http.ListenAndServe(":"+cfg.AppPort, nil)
+	// fmt.Scanln()
 }
