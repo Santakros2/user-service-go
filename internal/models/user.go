@@ -17,3 +17,8 @@ type CreateUserInput struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
 }
+
+type UpdateUserDetails struct {
+	Email *string `json:"email"`
+	Name  *string `json:"name"`
+}

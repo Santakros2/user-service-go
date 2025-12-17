@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"log"
 	"users-service/internal/models"
 	"users-service/internal/repository"
 	"users-service/pkg/utils"
@@ -46,4 +47,30 @@ func (s *UserService) GetAllUsers(ctx context.Context) ([]*models.User, error) {
 	users, err := s.Repo.GetAll(ctx)
 
 	return users, err
+}
+
+func (s *UserService) GetUserById(ctx context.Context, id string) (*models.User, error) {
+	user, err := s.Repo.GetUser(ctx, id)
+
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *UserService) UpdateUserById(ctx context.Context, id string, params models.UpdateUserDetails) error {
+	err := s.Repo.UpdateUser(ctx, id, params)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (s *UserService) DeleteUser(ctx context.Context, id string) error {
+	if err := s.Repo.DeleteUser(ctx, id); err != nil {
+		return err
+	}
+	return nil
 }

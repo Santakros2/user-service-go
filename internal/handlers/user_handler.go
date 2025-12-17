@@ -16,19 +16,6 @@ func NewUserHandler(svc *services.UserService) *UserHandler {
 	return &UserHandler{Service: svc}
 }
 
-func (h *UserHandler) Users(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		h.CreateUser(w, r)
-
-	case http.MethodGet:
-		h.GetAllUsers(w, r)
-
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
-}
-
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var input models.CreateUserInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -53,4 +40,46 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not get Users", http.StatusInternalServerError)
 	}
 	json.NewEncoder(w).Encode(users)
+}
+
+func (h *UserHandler) GetUserById(w http.ResponseWriter, r *http.Request) {
+	// For getting value from the param PathValue is used in go:1.22+
+	id := r.PathValue("id")
+
+	user, err := h.Service.GetUserById(r.Context(), id)
+	if err != nil {
+		http.Error(w, "Could not get user by this id", http.StatusInternalServerError)
+	}
+
+	json.NewEncoder(w).Encode(user)
+
+}
+
+func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	var params models.UpdateUserDetails
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	err := h.Service.UpdateUserById(r.Context(), id, params)
+	if err != nil {
+		http.Error(w, "Could not Update the user ", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode("User was updated.")
+}
+
+func (h *UserHandler) DeleteUserById(w http.ResponseWriter, r *http.Request) {
+	userid := r.PathValue("id")
+
+	if err := h.Service.DeleteUser(r.Context(), userid); err != nil {
+		http.Error(w, "User is not present by this id.", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode("User deleted successfully")
 }

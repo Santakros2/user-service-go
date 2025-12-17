@@ -3,6 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
+	"strings"
 	"users-service/internal/models"
 )
 
@@ -85,4 +88,57 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]*models.User, error) {
 
 	return users, nil
 
+}
+
+func (r *UserRepository) GetUser(ctx context.Context, id string) (*models.User, error) {
+	query := `select user_id, name, email, role, active from users where id = ?`
+
+	row := r.DB.QueryRowContext(ctx, query, id)
+	var user models.User
+	if err := row.Scan(&user.UserID, &user.Name, &user.Email, &user.Role, &user.Active); err == sql.ErrNoRows {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *UserRepository) UpdateUser(ctx context.Context, id string, updatedata models.UpdateUserDetails) error {
+
+	clauses := []string{}
+	args := []any{}
+
+	if updatedata.Name != nil {
+		clauses = append(clauses, "name= ?")
+		args = append(args, updatedata.Name)
+	}
+
+	if updatedata.Email != nil {
+		clauses = append(clauses, "email=?")
+		args = append(args, updatedata.Email)
+	}
+
+	if len(clauses) == 0 {
+		return errors.New("no fields to update")
+	}
+
+	query := fmt.Sprintf("UPDATE users SET %s WHERE user_id = ?", strings.Join(clauses, ", "))
+
+	args = append(args, id)
+
+	if _, err := r.DB.ExecContext(ctx, query, args...); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *UserRepository) DeleteUser(ctx context.Context, id string) error {
+	query := `DELETE FROM users WHERE user_id = ? `
+
+	_, err := r.DB.ExecContext(ctx, query, id)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }

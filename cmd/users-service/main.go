@@ -12,6 +12,7 @@ import (
 
 func main() {
 	cfg := config.LoadConfigMySQL()
+	mux := http.NewServeMux()
 
 	// oracleDB, err := db.ConnectOracle(cfg)
 	mySqlDB, err := db.ConnectMySql(cfg)
@@ -24,9 +25,18 @@ func main() {
 	userService := services.NewUserService(userRepo)
 	userHandler := handlers.NewUserHandler(userService)
 
-	http.HandleFunc("/users", userHandler.Users)
+	mux.HandleFunc("POST /users", userHandler.CreateUser)
+	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
+	mux.HandleFunc("GET /user/{id}", userHandler.GetUserById)
+	mux.HandleFunc("PUT /user/{id}", userHandler.UpdateUser)
+	mux.HandleFunc("DELETE /user/{id}", userHandler.DeleteUserById)
+	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("pong"))
+	})
 
 	log.Println("Users Service running on port", cfg.AppPort)
-	http.ListenAndServe(":"+cfg.AppPort, nil)
-	// fmt.Scanln()
+
+	if err := http.ListenAndServe(":"+cfg.AppPort, mux); err != nil {
+		log.Fatal("Server failed:", err)
+	}
 }

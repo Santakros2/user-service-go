@@ -22,17 +22,17 @@ func ConnectMySql(cfg *config.ConfigMySQL) (*sql.DB, error) {
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		log.Fatal(err)
-		// log.Println("error is ", err)
-		// fmt.Scanln()
+		// log.Fatal(err)
+		log.Println("error is ", err)
+		fmt.Scanln()
 
 	}
 	// defer db.Close()
 
 	if err := db.Ping(); err != nil {
-		log.Fatal(err)
-		// log.Println("error is ", err)
-		// fmt.Scanln()
+		// log.Fatal(err)
+		log.Println("error is ", err)
+		fmt.Scanln()
 
 	}
 
