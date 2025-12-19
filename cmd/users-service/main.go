@@ -27,9 +27,9 @@ func main() {
 
 	mux.HandleFunc("POST /users", userHandler.CreateUser)
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
-	mux.HandleFunc("GET /user/{id}", userHandler.GetUserById)
-	mux.HandleFunc("PUT /user/{id}", userHandler.UpdateUser)
-	mux.HandleFunc("DELETE /user/{id}", userHandler.DeleteUserById)
+	mux.HandleFunc("GET /users/{id}", userHandler.GetUserById)
+	mux.HandleFunc("PUT /users/{id}", userHandler.UpdateUser)
+	mux.HandleFunc("DELETE /users/{id}", userHandler.DeleteUserById)
 	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pong"))
 	})

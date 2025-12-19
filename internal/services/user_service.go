@@ -74,3 +74,14 @@ func (s *UserService) DeleteUser(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	user, err := s.Repo.GetUserByEmail(ctx, email)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return user, err
+
+}

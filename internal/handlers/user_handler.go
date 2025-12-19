@@ -35,6 +35,17 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := h.Service.GetAllUsers(r.Context())
+
+	// This gets the params from user request
+	q := r.URL.Query()
+
+	email := q.Get("email")
+
+	if email != "" {
+		h.getUserByEmail(w, r, email)
+		return
+	}
+
 	if err != nil {
 		log.Println("Could not get users: ", err)
 		http.Error(w, "Could not get Users", http.StatusInternalServerError)
@@ -82,4 +93,17 @@ func (h *UserHandler) DeleteUserById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode("User deleted successfully")
+}
+
+func (h *UserHandler) getUserByEmail(w http.ResponseWriter, r *http.Request, email string) {
+
+	user, err := h.Service.GetUserByEmail(r.Context(), email)
+
+	if err != nil {
+		http.Error(w, "No User Found with this email", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(user)
+
 }

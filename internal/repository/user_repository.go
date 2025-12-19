@@ -142,3 +142,23 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	query := `SELECT user_id, name, email, role, active FROM users WHERE email = ?`
+
+	row := r.DB.QueryRowContext(ctx, query, email)
+
+	var user models.User
+
+	err := row.Scan(&user.UserID, &user.Name, &user.Email, &user.Role, &user.Active)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	// log.Println(user)
+	return &user, nil
+}
