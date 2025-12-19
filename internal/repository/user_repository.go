@@ -9,6 +9,16 @@ import (
 	"users-service/internal/models"
 )
 
+type DBrepo interface {
+	Create(ctx context.Context, u models.User, passwordHash string) error
+	GetByID(ctx context.Context, id string) (*models.User, error)
+	GetAll(ctx context.Context) ([]*models.User, error)
+	GetUser(ctx context.Context, id string) (*models.User, error)
+	UpdateUser(ctx context.Context, id string, updatedata models.UpdateUserDetails) error
+	DeleteUser(ctx context.Context, id string) error
+	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
+}
+
 type UserRepository struct {
 	DB *sql.DB
 }
