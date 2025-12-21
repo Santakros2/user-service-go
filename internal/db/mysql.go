@@ -18,21 +18,21 @@ func ConnectMySql(cfg *config.ConfigMySQL) (*sql.DB, error) {
 		cfg.MySqlPort,
 		cfg.MySqlDB,
 	)
-	// dsn := "user:pass@tcp(mysql:3306)/users?parseTime=true&tls=false"
+	// dsn := "root:rootass@tcp(mysql:3306)/users?parseTime=true&tls=false"
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		// log.Fatal(err)
-		log.Println("error is ", err)
-		fmt.Scanln()
+		log.Fatal(err)
+		// log.Println("error is ", err)
+		// fmt.Scanln()
 
 	}
 	// defer db.Close()
 
 	if err := db.Ping(); err != nil {
-		// log.Fatal(err)
-		log.Println("error is ", err)
-		fmt.Scanln()
+		log.Fatal(err)
+		// log.Println("error is ", err)
+		// fmt.Scanln()
 
 	}
 

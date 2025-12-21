@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	stderr "errors"
 	"log"
 	"net/http"
+	"users-service/internal/errors"
 	"users-service/internal/models"
 	"users-service/internal/services"
 )
@@ -19,22 +21,24 @@ func NewUserHandler(svc *services.UserService) *UserHandler {
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var input models.CreateUserInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		h.writeError(w, errors.New(
+			errors.CodeValidation,
+			"invalid request body",
+		))
 		return
 	}
 
 	// calling the servie package to handle the request. Parameter is userInput model.
 	user, err := h.Service.CreateUser(r.Context(), input)
 	if err != nil {
-		log.Println("CreateUser error:", err)
-		http.Error(w, "Could not create user", http.StatusInternalServerError)
+		h.writeError(w, err)
+		return
 	}
 
 	json.NewEncoder(w).Encode(user)
 }
 
 func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := h.Service.GetAllUsers(r.Context())
 
 	// This gets the params from user request
 	q := r.URL.Query()
@@ -45,11 +49,13 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		h.getUserByEmail(w, r, email)
 		return
 	}
+	users, err := h.Service.GetAllUsers(r.Context())
 
 	if err != nil {
-		log.Println("Could not get users: ", err)
-		http.Error(w, "Could not get Users", http.StatusInternalServerError)
+		h.writeError(w, err)
+		return
 	}
+
 	json.NewEncoder(w).Encode(users)
 }
 
@@ -59,7 +65,8 @@ func (h *UserHandler) GetUserById(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.Service.GetUserById(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Could not get user by this id", http.StatusInternalServerError)
+		h.writeError(w, err)
+		return
 	}
 
 	json.NewEncoder(w).Encode(user)
@@ -71,13 +78,16 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	var params models.UpdateUserDetails
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		h.writeError(w, errors.New(
+			errors.CodeValidation,
+			"invalid request body",
+		))
 		return
 	}
 
 	err := h.Service.UpdateUserById(r.Context(), id, params)
 	if err != nil {
-		http.Error(w, "Could not Update the user ", http.StatusInternalServerError)
+		h.writeError(w, err)
 		return
 	}
 
@@ -88,7 +98,7 @@ func (h *UserHandler) DeleteUserById(w http.ResponseWriter, r *http.Request) {
 	userid := r.PathValue("id")
 
 	if err := h.Service.DeleteUser(r.Context(), userid); err != nil {
-		http.Error(w, "User is not present by this id.", http.StatusInternalServerError)
+		h.writeError(w, err)
 		return
 	}
 
@@ -100,10 +110,39 @@ func (h *UserHandler) getUserByEmail(w http.ResponseWriter, r *http.Request, ema
 	user, err := h.Service.GetUserByEmail(r.Context(), email)
 
 	if err != nil {
-		http.Error(w, "No User Found with this email", http.StatusInternalServerError)
+		h.writeError(w, err)
 		return
 	}
 
 	json.NewEncoder(w).Encode(user)
+
+}
+
+func (h *UserHandler) writeError(w http.ResponseWriter, err error) {
+	log.Println("request error:", err)
+
+	var appErr *errors.AppError
+
+	if !stderr.As(err, &appErr) {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	switch appErr.Code {
+	case errors.CodeValidation:
+		http.Error(w, appErr.Message, http.StatusBadRequest)
+	case errors.CodeConflict:
+		http.Error(w, appErr.Message, http.StatusConflict)
+	case errors.CodeUnauthorized:
+		http.Error(w, appErr.Message, http.StatusUnauthorized)
+	case errors.CodeForbidden:
+		http.Error(w, appErr.Message, http.StatusForbidden)
+	case errors.CodeNotFound:
+		http.Error(w, appErr.Message, http.StatusNotFound)
+	case errors.CodeTimeout:
+		http.Error(w, appErr.Message, http.StatusGatewayTimeout)
+	default:
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+	}
 
 }
