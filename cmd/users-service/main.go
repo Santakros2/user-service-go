@@ -1,23 +1,25 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"users-service/internal/config"
 	"users-service/internal/db"
 	"users-service/internal/handlers"
+	"users-service/internal/logger"
+	"users-service/internal/middleware"
 	"users-service/internal/repository"
 	"users-service/internal/services"
 )
 
 func main() {
+	logger.Init()
 	cfg := config.LoadConfigMySQL()
 	mux := http.NewServeMux()
 
 	// oracleDB, err := db.ConnectOracle(cfg)
 	mySqlDB, err := db.ConnectMySql(cfg)
 	if err != nil {
-		log.Fatal("Cannot connect to Oracle:", err)
+		logger.Logger.Fatal("cannot connect to mysql:", err)
 	}
 	defer mySqlDB.Close()
 
@@ -34,9 +36,11 @@ func main() {
 		w.Write([]byte("pong"))
 	})
 
-	log.Println("Users Service running on port", cfg.AppPort)
+	logger.Logger.Println("users service running on port", cfg.AppPort)
 
-	if err := http.ListenAndServe(":"+cfg.AppPort, mux); err != nil {
-		log.Fatal("Server failed:", err)
+	handler := middleware.Logging(mux)
+
+	if err := http.ListenAndServe(":"+cfg.AppPort, handler); err != nil {
+		logger.Logger.Fatal("server failed:", err)
 	}
 }

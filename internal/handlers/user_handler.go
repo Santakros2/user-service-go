@@ -3,9 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	stderr "errors"
-	"log"
 	"net/http"
 	"users-service/internal/errors"
+	"users-service/internal/logger"
 	"users-service/internal/models"
 	"users-service/internal/services"
 )
@@ -119,7 +119,7 @@ func (h *UserHandler) getUserByEmail(w http.ResponseWriter, r *http.Request, ema
 }
 
 func (h *UserHandler) writeError(w http.ResponseWriter, err error) {
-	log.Println("request error:", err)
+	logger.Logger.Println("request error:", err)
 
 	var appErr *errors.AppError
 
