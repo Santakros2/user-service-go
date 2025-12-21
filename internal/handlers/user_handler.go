@@ -20,6 +20,7 @@ func NewUserHandler(svc *services.UserService) *UserHandler {
 
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var input models.CreateUserInput
+
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		h.writeError(w, errors.New(
 			errors.CodeValidation,

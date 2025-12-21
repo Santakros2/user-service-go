@@ -42,7 +42,7 @@ func LoadConfigMySQL() *ConfigMySQL {
 		MySqlHost:     getEnv("MYSQL_HOST", "localhost"),
 		MySqlPort:     getEnv("MYSQL_PORT", "3306"),
 		MySqlProtocol: getEnv("MYSQL_PROTOCOL", "tcp"),
-		MySqlDB:       getEnv("MYSQL_DB", "users"),
+		MySqlDB:       getEnv("MYSQL_DB", "userdb"),
 		AppPort:       getEnv("APP_PORT", "8080"),
 	}
 }

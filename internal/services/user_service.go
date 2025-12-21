@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"log"
 	"users-service/internal/errors"
 	"users-service/internal/models"
 	"users-service/internal/repository"
@@ -26,6 +27,8 @@ func (s *UserService) CreateUser(ctx context.Context, input models.CreateUserInp
 	// 	return nil, err
 	// }
 
+	log.Println(input.Email, " 	", input.Name)
+
 	if input.Email == "" {
 		return nil, errors.New(errors.CodeValidation, "email is required")
 	}
@@ -39,7 +42,7 @@ func (s *UserService) CreateUser(ctx context.Context, input models.CreateUserInp
 		Email:  input.Email,
 		Name:   input.Name,
 		Role:   "USER",
-		Status: 1,
+		Status: "ACTIVE",
 	}
 
 	err := s.Repo.Create(ctx, user)

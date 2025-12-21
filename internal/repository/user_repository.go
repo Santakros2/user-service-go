@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	stderr "errors"
 	"fmt"
+	"log"
 	"strings"
 	"users-service/internal/errors"
 	"users-service/internal/models"
@@ -34,7 +35,7 @@ func (r *UserRepository) Create(ctx context.Context, u models.User) error {
 	INSERT INTO users (user_id, email, name, role, status)
 	VALUES (?, ?, ?, ?, ?)
 	`
-	_, err := r.DB.ExecContext(ctx, query,
+	result, err := r.DB.ExecContext(ctx, query,
 		u.UserID,
 		u.Email,
 		u.Name,
@@ -51,8 +52,8 @@ func (r *UserRepository) Create(ctx context.Context, u models.User) error {
 		// the error DB internally can generate mulple type
 		// Like Timeout, Cancelled context, IO error, network error, mysql error
 		// mysql because i am using mysql otherwise specific db error that is being used
-		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
-			// Error 1062 = Duplicate entry (UNIQUE constraint violation)
+		var mysqlErr *mysql.MySQLError
+		if stderr.As(err, &mysqlErr) && mysqlErr != nil {
 			if mysqlErr.Number == 1062 {
 				return errors.New(
 					errors.CodeConflict,
@@ -64,12 +65,17 @@ func (r *UserRepository) Create(ctx context.Context, u models.User) error {
 		return errors.Wrap(errors.CodeInternal, "database error", err)
 	}
 
+	rows, err := result.RowsAffected()
+	if err == nil {
+		log.Println("ROWS INSERTED:", rows)
+	}
+
 	return nil
 }
 
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	query := `
-	SELECT user_id, email, name, role, active, created_at, updated_at
+	SELECT user_id, email, name, role, status, created_at, updated_at
 	FROM users WHERE user_id = ?
 	`
 
@@ -90,7 +96,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 func (r *UserRepository) GetAll(ctx context.Context) ([]*models.User, error) {
 	users := make([]*models.User, 0)
 
-	query := `SELECT * FROM USERS`
+	query := `SELECT user_id, name, email, role, status, created_at, updated_at FROM users `
 
 	rows, err := r.DB.QueryContext(ctx, query)
 	if err != nil {
@@ -103,8 +109,6 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]*models.User, error) {
 
 	defer rows.Close()
 
-	var skip any
-
 	for rows.Next() {
 		user := new(models.User)
 		err := rows.Scan(
@@ -115,7 +119,6 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]*models.User, error) {
 			&user.Status,
 			&user.CreatedAt,
 			&user.UpdatedAt,
-			&skip,
 		)
 		if err != nil {
 			return nil, errors.Wrap(
